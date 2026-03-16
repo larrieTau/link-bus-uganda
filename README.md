@@ -29,7 +29,7 @@ Maps: Leaflet.js / Google Maps API for route visualization.
 Clone the repo:
 
 Bash
-git clone https://github.com/your-username/link-bus-uganda.git
+git clone https://github.com/larrietau/link-bus-uganda.git
 Install dependencies:
 
 Bash
