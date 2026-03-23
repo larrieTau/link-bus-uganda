@@ -42,6 +42,20 @@ Option 2: Use a local static server (recommended)
 - Then open:
   - http://localhost:4173
 
+## Activate Mobile Money Checkout
+
+MTN and Airtel payment buttons are wired in the booking widget.
+
+To activate live checkout, set your Flutterwave public key before the app script in index.html:
+
+<script>
+  window.FLW_PUBLIC_KEY = "FLWPUBK_TEST-xxxxxxxxxxxxxxxxxxxxx-X";
+</script>
+
+Notes:
+- Without this key, the app runs in safe demo mode and shows manual MTN/Airtel instructions.
+- Use your production key only on trusted deployments and always verify payment server-side in a backend before issuing final tickets.
+
 ## Notes
 
 - Internal anchor links have been validated against existing section IDs.

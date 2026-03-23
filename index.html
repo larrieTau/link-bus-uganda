@@ -79,6 +79,7 @@
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://checkout.flutterwave.com/v3.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
@@ -101,6 +102,12 @@
       const [origin, setOrigin] = useState("kampala");
       const [destination, setDestination] = useState("");
       const [travelDate, setTravelDate] = useState("");
+      const [paymentMethod, setPaymentMethod] = useState("mtn");
+      const [phoneNumber, setPhoneNumber] = useState("");
+      const [isPaying, setIsPaying] = useState(false);
+      const [bookingMessage, setBookingMessage] = useState("");
+
+      const FLW_PUBLIC_KEY = window.FLW_PUBLIC_KEY || "";
 
       const appRef = useRef(null);
       const navRef = useRef(null);
@@ -214,6 +221,29 @@
         { to: "Kagadi", time: "~4 hrs", price: "From UGX 32,000", key: "kagadi" }
       ];
 
+      const fareByDestination = {
+        fortportal: 45000,
+        kasese: 50000,
+        masindi: 30000,
+        hoima: 28000,
+        bundibugyo: 60000,
+        bwera: 65000,
+        kaisotonya: 38000,
+        kagadi: 32000
+      };
+
+      const locationName = {
+        kampala: "Kampala",
+        fortportal: "Fort Portal",
+        kasese: "Kasese",
+        masindi: "Masindi",
+        hoima: "Hoima",
+        bundibugyo: "Bundibugyo",
+        bwera: "Bwera",
+        kaisotonya: "Kaiso Tonya",
+        kagadi: "Kagadi"
+      };
+
       const scheduleRows = [
         ["Kampala → Fort Portal", "7:00 AM", "12:00 PM", "LB-104", "4", "Departed"],
         ["Kampala → Kasese", "7:30 AM", "1:30 PM", "LB-207", "0", "Departed"],
@@ -265,6 +295,93 @@
           return;
         }
         scrollToId("schedule");
+      }
+
+      function normalizeUgPhone(raw) {
+        const digits = raw.replace(/\D/g, "");
+        if (!digits) return "";
+        if (digits.startsWith("256") && digits.length === 12) return digits;
+        if (digits.startsWith("0") && digits.length === 10) return `256${digits.slice(1)}`;
+        if (digits.length === 9) return `256${digits}`;
+        return digits;
+      }
+
+      function isValidUgPhone(raw) {
+        const normalized = normalizeUgPhone(raw);
+        return /^2567\d{8}$/.test(normalized);
+      }
+
+      function activateMobileMoneyPayment() {
+        setBookingMessage("");
+        if (!origin || !destination || !travelDate) {
+          alert("Please complete origin, destination, and travel date first.");
+          return;
+        }
+        if (origin === destination) {
+          alert("Origin and destination cannot be the same.");
+          return;
+        }
+        if (!fareByDestination[destination]) {
+          alert("This destination fare is not configured yet.");
+          return;
+        }
+        if (!isValidUgPhone(phoneNumber)) {
+          alert("Please enter a valid Uganda phone number (e.g. 0772123456).");
+          return;
+        }
+
+        const normalizedPhone = normalizeUgPhone(phoneNumber);
+        const amount = fareByDestination[destination];
+        const fromName = locationName[origin] || "Kampala";
+        const toName = locationName[destination] || "Destination";
+        const txRef = `LB-${Date.now()}-${paymentMethod.toUpperCase()}`;
+
+        if (window.FlutterwaveCheckout && FLW_PUBLIC_KEY) {
+          setIsPaying(true);
+          window.FlutterwaveCheckout({
+            public_key: FLW_PUBLIC_KEY,
+            tx_ref: txRef,
+            amount,
+            currency: "UGX",
+            payment_options: "mobilemoneyuganda",
+            customer: {
+              email: "payments@linkbusuganda.com",
+              phonenumber: normalizedPhone,
+              name: "Link Bus Passenger"
+            },
+            meta: {
+              channel: paymentMethod,
+              origin,
+              destination,
+              travelDate
+            },
+            customizations: {
+              title: "Link Bus Uganda",
+              description: `${fromName} to ${toName} ticket payment`,
+              logo: ""
+            },
+            callback: (response) => {
+              setIsPaying(false);
+              if (response && (response.status === "successful" || response.status === "completed")) {
+                setBookingMessage(`Payment successful via ${paymentMethod.toUpperCase()}. Ref: ${response.tx_ref || txRef}.`);
+                scrollToId("bookingConfirmation");
+                return;
+              }
+              setBookingMessage("Payment was not completed. You can try again.");
+              scrollToId("bookingConfirmation");
+            },
+            onclose: () => {
+              setIsPaying(false);
+            }
+          });
+          return;
+        }
+
+        const ussd = paymentMethod === "mtn" ? "*165#" : "*185#";
+        setBookingMessage(
+          `Live gateway key missing. Demo mode: dial ${ussd} on ${normalizedPhone} and complete UGX ${amount.toLocaleString()} payment. Then confirm with Link Bus support.`
+        );
+        scrollToId("bookingConfirmation");
       }
 
       function selectRoute(destinationKey) {
@@ -426,10 +543,51 @@
 
               <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4 text-xs">
                 <span className="font-medium text-gray-500">Secure payments via:</span>
-                <span className="rounded-lg bg-[#fff3cd] px-3 py-1.5 font-semibold text-[#856404]">MTN Mobile Money</span>
-                <span className="rounded-lg bg-[#ffe0e0] px-3 py-1.5 font-semibold text-[#9b1c1c]">Airtel Money</span>
+                <button
+                  onClick={() => setPaymentMethod("mtn")}
+                  className={`rounded-lg px-3 py-1.5 font-semibold ${paymentMethod === "mtn" ? "bg-[#ffe08b] text-[#5d4a02]" : "bg-[#fff3cd] text-[#856404]"}`}
+                >
+                  MTN Mobile Money
+                </button>
+                <button
+                  onClick={() => setPaymentMethod("airtel")}
+                  className={`rounded-lg px-3 py-1.5 font-semibold ${paymentMethod === "airtel" ? "bg-[#ffb9b9] text-[#6f1212]" : "bg-[#ffe0e0] text-[#9b1c1c]"}`}
+                >
+                  Airtel Money
+                </button>
                 <span className="rounded-lg bg-[#e8f0fe] px-3 py-1.5 font-semibold text-[#1a56db]">Visa / Mastercard</span>
               </div>
+
+              <div className="mt-3 grid grid-cols-1 gap-3 border-t border-gray-100 pt-4 md:grid-cols-[1fr_auto]">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold uppercase tracking-[0.07em] text-gray-500">Mobile Money Number</label>
+                  <input
+                    type="tel"
+                    placeholder="e.g. 0772123456"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="rounded-[10px] border-2 border-gray-200 bg-white px-3.5 py-3 text-[0.95rem] outline-none transition focus:border-green"
+                  />
+                </div>
+                <button
+                  onClick={activateMobileMoneyPayment}
+                  disabled={isPaying}
+                  className="whitespace-nowrap rounded-[10px] bg-yellow px-7 py-[13px] font-display text-[1.05rem] font-bold tracking-[0.03em] text-green-dark transition hover:-translate-y-0.5 hover:bg-[#ffe033] disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {isPaying ? "PROCESSING..." : `PAY WITH ${paymentMethod === "mtn" ? "MTN" : "AIRTEL"} →`}
+                </button>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                <span>Fare estimate: <strong className="text-green-dark">{destination ? `UGX ${fareByDestination[destination]?.toLocaleString() || "-"}` : "Select destination"}</strong></span>
+                <span>{FLW_PUBLIC_KEY ? "Gateway: Active" : "Gateway: Demo mode (set window.FLW_PUBLIC_KEY)"}</span>
+              </div>
+
+              {bookingMessage && (
+                <div id="bookingConfirmation" className="mt-3 rounded-lg border border-green/30 bg-green-light px-3 py-2 text-sm text-green-dark">
+                  {bookingMessage}
+                </div>
+              )}
             </div>
           </section>
 
