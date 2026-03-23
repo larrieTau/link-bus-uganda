@@ -107,6 +107,37 @@
       const [isPaying, setIsPaying] = useState(false);
       const [bookingMessage, setBookingMessage] = useState("");
 
+      // Admin Dashboard State
+      const [isAdminOpen, setIsAdminOpen] = useState(false);
+      const [adminPassword, setAdminPassword] = useState("");
+      const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+      const [adminTab, setAdminTab] = useState("routes");
+      const ADMIN_PASSWORD = "admin123";
+      
+      // Mock Admin Data
+      const [adminRoutes, setAdminRoutes] = useState([
+        { id: 1, from: "Kampala", to: "Fort Portal", distance: "310km", status: "Active" },
+        { id: 2, from: "Kampala", to: "Kasese", distance: "380km", status: "Active" },
+        { id: 3, from: "Kampala", to: "Masindi", distance: "240km", status: "Active" }
+      ]);
+      const [adminSchedules, setAdminSchedules] = useState([
+        { id: 1, route: "Kampala-Fort Portal", departure: "06:00 AM", arrival: "02:00 PM", bus: "LB-001", seats: 45, booked: 38 },
+        { id: 2, route: "Kampala-Fort Portal", departure: "12:00 PM", arrival: "08:00 PM", bus: "LB-002", seats: 45, booked: 42 },
+        { id: 3, route: "Kampala-Kasese", departure: "07:00 AM", arrival: "04:00 PM", bus: "LB-003", seats: 50, booked: 45 }
+      ]);
+      const [adminBookings, setAdminBookings] = useState([
+        { id: 1, passenger: "John Doe", phone: "256772123456", route: "Kampala-Fort Portal", date: "2026-03-25", seats: 1, amount: "45,000 UGX", status: "Confirmed" },
+        { id: 2, passenger: "Jane Smith", phone: "256701987654", route: "Kampala-Kasese", date: "2026-03-26", seats: 2, amount: "100,000 UGX", status: "Pending" }
+      ]);
+      const [adminPayments, setAdminPayments] = useState([
+        { id: 1, ref: "LB-1711180045000-MTN", amount: "45,000 UGX", method: "MTN Mobile Money", date: "2026-03-20", status: "Completed" },
+        { id: 2, ref: "LB-1711180046000-AIRTEL", amount: "100,000 UGX", method: "Airtel Money", date: "2026-03-21", status: "Completed" }
+      ]);
+      const [adminPayouts, setAdminPayouts] = useState([
+        { id: 1, date: "2026-03-20", totalPayments: "1,250,000 UGX", commission: "125,000 UGX", netPayout: "1,125,000 UGX", status: "Completed" },
+        { id: 2, date: "2026-03-21", totalPayments: "890,000 UGX", commission: "89,000 UGX", netPayout: "801,000 UGX", status: "Pending" }
+      ]);
+
       const FLW_PUBLIC_KEY = window.FLW_PUBLIC_KEY || "";
 
       const appRef = useRef(null);
@@ -403,6 +434,79 @@
         return "bg-blue-100 text-blue-700";
       }
 
+      // Admin Dashboard Functions
+      function handleAdminLogin(e) {
+        e.preventDefault();
+        if (adminPassword === ADMIN_PASSWORD) {
+          setIsAdminAuthenticated(true);
+          setAdminPassword("");
+          console.log("✅ Admin authenticated successfully");
+        } else {
+          alert("Invalid password");
+          setAdminPassword("");
+        }
+      }
+
+      function handleAdminLogout() {
+        setIsAdminAuthenticated(false);
+        setIsAdminOpen(false);
+        setAdminPassword("");
+        console.log("Admin logged out");
+      }
+
+      // Routes Management
+      function handleAddRoute() {
+        const newRoute = { id: adminRoutes.length + 1, from: "Kampala", to: "New Destination", distance: "0km", status: "Inactive" };
+        setAdminRoutes([...adminRoutes, newRoute]);
+        console.log("📍 Route added:", newRoute);
+      }
+
+      function handleDeleteRoute(id) {
+        setAdminRoutes(adminRoutes.filter(r => r.id !== id));
+        console.log("🗑️ Route deleted:", id);
+      }
+
+      // Schedules Management
+      function handleAddSchedule() {
+        const newSchedule = { id: adminSchedules.length + 1, route: "Kampala-New Route", departure: "06:00 AM", arrival: "TBD", bus: "LB-NEW", seats: 45, booked: 0 };
+        setAdminSchedules([...adminSchedules, newSchedule]);
+        console.log("📅 Schedule added:", newSchedule);
+      }
+
+      function handleDeleteSchedule(id) {
+        setAdminSchedules(adminSchedules.filter(s => s.id !== id));
+        console.log("🗑️ Schedule deleted:", id);
+      }
+
+      // Bookings Management
+      function handleDeleteBooking(id) {
+        setAdminBookings(adminBookings.filter(b => b.id !== id));
+        console.log("🗑️ Booking cancelled:", id);
+      }
+
+      // Payments Management (view only, read from backend)
+      function handleRefreshPayments() {
+        console.log("🔄 Refreshing payment data from backend...");
+      }
+
+      // Payouts Management
+      function handleProcessPayout() {
+        console.log("💰 Processing payout - would trigger backend endpoint");
+      }
+
+      function handleExportReports() {
+        const report = {
+          routes: adminRoutes,
+          schedules: adminSchedules,
+          bookings: adminBookings,
+          payments: adminPayments,
+          payouts: adminPayouts,
+          exportedAt: new Date().toISOString()
+        };
+        console.log("📊 Report exported:", report);
+        console.log("Would download as CSV/JSON");
+      }
+
       return (
         <div ref={appRef}>
           <nav ref={navRef} className="sticky top-0 z-50 flex h-16 items-center justify-between bg-green-dark px-[5vw] shadow-[0_2px_12px_rgba(0,0,0,0.25)]">
@@ -433,6 +537,14 @@
             >
               Book Now
             </a>
+
+            <button
+              onClick={() => setIsAdminOpen(true)}
+              className="hidden whitespace-nowrap rounded-lg bg-white/20 px-4 py-2 text-xs font-bold text-white transition hover:bg-white/30 md:inline-block"
+              title="Admin Dashboard"
+            >
+              ⚙️ Admin
+            </button>
 
             <button
               className="flex flex-col gap-1.5 md:hidden"
