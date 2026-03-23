@@ -342,6 +342,74 @@
         setOfflineBookings([]);
         localStorage.removeItem("offlineBookings");
         console.log("🗑️ Offline bookings cleared");
+            // Support Ticket System State
+            const [isTicketOpen, setIsTicketOpen] = useState(false);
+            const [supportTickets, setSupportTickets] = useState(() => {
+              try {
+                return JSON.parse(localStorage.getItem("supportTickets")) || [];
+              } catch {
+                return [];
+              }
+            });
+            const [ticketForm, setTicketForm] = useState({
+              name: "",
+              email: "",
+              category: "general",
+              description: "",
+              priority: "medium"
+            });
+
+            // Save tickets to localStorage whenever they change
+            useEffect(() => {
+              localStorage.setItem("supportTickets", JSON.stringify(supportTickets));
+            }, [supportTickets]);
+
+            const ticketCategories = ["General Inquiry", "Booking Issue", "Payment Problem", "Technical Issue", "Complaint", "Suggestion"];
+      
+            function handleTicketSubmit() {
+              if (!ticketForm.name || !ticketForm.email || !ticketForm.description) {
+                alert("Please fill in all required fields (Name, Email, Description)");
+                return;
+              }
+              if (ticketForm.description.length < 10) {
+                alert("Description must be at least 10 characters");
+                return;
+              }
+              const newTicket = {
+                id: `TK-${Date.now()}`,
+                name: ticketForm.name,
+                email: ticketForm.email,
+                category: ticketForm.category,
+                description: ticketForm.description,
+                priority: ticketForm.priority,
+                status: "open",
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              };
+              setSupportTickets([newTicket, ...supportTickets]);
+              setTicketForm({ name: "", email: "", category: "general", description: "", priority: "medium" });
+              alert("✅ Ticket created successfully! Ticket ID: " + newTicket.id);
+              console.log("🎫 Support ticket created:", newTicket);
+              trackFeatureUsage("support_ticket_created");
+            }
+
+            function handleUpdateTicketStatus(ticketId, newStatus) {
+              setSupportTickets(supportTickets.map(t => 
+                t.id === ticketId 
+                  ? { ...t, status: newStatus, updatedAt: new Date().toISOString() }
+                  : t
+              ));
+              trackFeatureUsage("support_ticket_updated");
+            }
+
+            function handleDeleteTicket(ticketId) {
+              if (confirm("Are you sure you want to delete this ticket?")) {
+                setSupportTickets(supportTickets.filter(t => t.id !== ticketId));
+                trackFeatureUsage("support_ticket_deleted");
+              }
+            }
+
+            // Analytics & Custom Tracking
       }
 
       // Analytics & Custom Tracking
@@ -1168,7 +1236,7 @@
                   </button>
                   {offlineBookings.length > 0 && (
                     <button
-                      onClick={() => setIsSearchOpen(true)}
+                      onClick={() => { trackFeatureUsage("advanced_search"); setIsSearchOpen(true); }}
                       className="rounded-lg bg-blue-500 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-600"
                     >
                       📋 View Drafts ({offlineBookings.length})
