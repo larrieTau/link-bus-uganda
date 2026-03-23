@@ -138,6 +138,53 @@
         { id: 2, date: "2026-03-21", totalPayments: "890,000 UGX", commission: "89,000 UGX", netPayout: "801,000 UGX", status: "Pending" }
       ]);
 
+      // Live GPS Tracking State
+      const [isTrackingOpen, setIsTrackingOpen] = useState(false);
+      const [selectedBusForTracking, setSelectedBusForTracking] = useState("LB-001");
+      
+      // Mock GPS Data - Real-time bus locations
+      const [busLocations, setBusLocations] = useState({
+        "LB-001": { lat: 0.3163, lng: 32.5853, name: "Kampala (Start)", speed: 0, eta: "06:00", progress: 0 },
+        "LB-002": { lat: 1.3521, lng: 32.2988, name: "On Route (100km)", speed: 85, eta: "11:30", progress: 32 },
+        "LB-003": { lat: 1.6521, lng: 31.5825, name: "Mid-way (200km)", speed: 90, eta: "02:15", progress: 65 }
+      });
+
+      // Route coordinates (sample waypoints from Kampala to Fort Portal)
+      const routeCoordinates = [
+        { lat: 0.3163, lng: 32.5853, name: "Kampala" },
+        { lat: 0.5, lng: 32.4, name: "Masindi Road" },
+        { lat: 0.8, lng: 32.2, name: "Hoima Junction" },
+        { lat: 1.2, lng: 31.9, name: "Fortportal Road" },
+        { lat: 1.6761, lng: 31.4865, name: "Fort Portal" }
+      ];
+
+      // Advanced Search State
+      const [isSearchOpen, setIsSearchOpen] = useState(false);
+      const [searchFilters, setSearchFilters] = useState({
+        minTime: "06:00",
+        maxTime: "20:00",
+        minPrice: 30000,
+        maxPrice: 65000,
+        amenities: {
+          ac: false,
+          wifi: false,
+          usb: false,
+          recline: false,
+          toilet: false,
+          blanket: false
+        }
+      });
+
+      // Mock schedule data with amenities
+      const [scheduleWithAmenities] = useState([
+        { id: 1, time: "06:00", dest: "Fort Portal", price: 45000, amenities: ["ac", "usb", "toilet"], bus: "LB-001" },
+        { id: 2, time: "08:30", dest: "Fort Portal", price: 50000, amenities: ["ac", "wifi", "usb", "recline", "toilet"], bus: "LB-002" },
+        { id: 3, time: "12:00", dest: "Fort Portal", price: 40000, amenities: ["ac", "toilet"], bus: "LB-003" },
+        { id: 4, time: "14:30", dest: "Fort Portal", price: 45000, amenities: ["ac", "wifi", "recline", "toilet", "blanket"], bus: "LB-004" },
+        { id: 5, time: "17:00", dest: "Fort Portal", price: 42000, amenities: ["ac", "usb", "toilet"], bus: "LB-005" },
+        { id: 6, time: "19:30", dest: "Fort Portal", price: 38000, amenities: ["ac"], bus: "LB-006" }
+      ]);
+
       const FLW_PUBLIC_KEY = window.FLW_PUBLIC_KEY || "";
 
       const appRef = useRef(null);
@@ -507,6 +554,105 @@
         console.log("Would download as CSV/JSON");
       }
 
+      // GPS Tracking Functions
+      function calculateDistance(lat1, lng1, lat2, lng2) {
+        // Haversine formula for distance between two coordinates in km
+        const R = 6371;
+        const dLat = ((lat2 - lat1) * Math.PI) / 180;
+        const dLng = ((lng2 - lng1) * Math.PI) / 180;
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos((lat1 * Math.PI) / 180) *
+            Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLng / 2) *
+            Math.sin(dLng / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+      }
+
+      function calculateETA(currentLat, currentLng, destLat, destLng, speedKmh) {
+        const distKm = calculateDistance(currentLat, currentLng, destLat, destLng);
+        if (speedKmh === 0) return "Stationary";
+        const timeHours = distKm / speedKmh;
+        const hours = Math.floor(timeHours);
+        const minutes = Math.round((timeHours - hours) * 60);
+        return `${hours}h ${minutes}m`;
+      }
+
+      function simulateBusMovement(busId) {
+        // Simulate bus GPS update by moving toward next waypoint
+        const bus = busLocations[busId];
+        if (!bus) return;
+        
+        const nextLat = bus.lat + Math.random() * 0.05 - 0.025;
+        const nextLng = bus.lng + Math.random() * 0.05 - 0.025;
+        const newProgress = Math.min(bus.progress + 2, 100);
+        
+        setBusLocations((prev) => ({
+          ...prev,
+          [busId]: {
+            ...bus,
+            lat: nextLat,
+            lng: nextLng,
+            speed: Math.floor(Math.random() * 40) + 70,
+            progress: newProgress,
+            eta: calculateETA(nextLat, nextLng, 1.6761, 31.4865, 85)
+          }
+        }));
+      }
+
+      // Simulate real-time GPS updates every 5 seconds
+      useEffect(() => {
+        if (!isTrackingOpen) return;
+        const interval = setInterval(() => {
+          simulateBusMovement(selectedBusForTracking);
+        }, 5000);
+        return () => clearInterval(interval);
+      }, [isTrackingOpen, selectedBusForTracking]);
+
+      // Advanced Search Functions
+      function filterSchedules() {
+        return scheduleWithAmenities.filter((schedule) => {
+          const [hours, mins] = schedule.time.split(":").map(Number);
+          const [minH, minM] = searchFilters.minTime.split(":").map(Number);
+          const [maxH, maxM] = searchFilters.maxTime.split(":").map(Number);
+          
+          const scheduleMinutes = hours * 60 + mins;
+          const minMinutes = minH * 60 + minM;
+          const maxMinutes = maxH * 60 + maxM;
+
+          const timeMatch = scheduleMinutes >= minMinutes && scheduleMinutes <= maxMinutes;
+          const priceMatch = schedule.price >= searchFilters.minPrice && schedule.price <= searchFilters.maxPrice;
+
+          const selectedAmenities = Object.entries(searchFilters.amenities)
+            .filter(([_, selected]) => selected)
+            .map(([key, _]) => key);
+
+          const amenityMatch =
+            selectedAmenities.length === 0 ||
+            selectedAmenities.every((amenity) => schedule.amenities.includes(amenity));
+
+          return timeMatch && priceMatch && amenityMatch;
+        });
+      }
+
+      function resetFilters() {
+        setSearchFilters({
+          minTime: "06:00",
+          maxTime: "20:00",
+          minPrice: 30000,
+          maxPrice: 65000,
+          amenities: {
+            ac: false,
+            wifi: false,
+            usb: false,
+            recline: false,
+            toilet: false,
+            blanket: false
+          }
+        });
+      }
+
       return (
         <div ref={appRef}>
           <nav ref={navRef} className="sticky top-0 z-50 flex h-16 items-center justify-between bg-green-dark px-[5vw] shadow-[0_2px_12px_rgba(0,0,0,0.25)]">
@@ -544,6 +690,14 @@
               title="Admin Dashboard"
             >
               ⚙️ Admin
+            </button>
+
+            <button
+              onClick={() => setIsTrackingOpen(true)}
+              className="hidden whitespace-nowrap rounded-lg bg-white/20 px-4 py-2 text-xs font-bold text-white transition hover:bg-white/30 md:inline-block"
+              title="Track Your Bus"
+            >
+              📍 Track Bus
             </button>
 
             <button
@@ -1398,6 +1552,162 @@
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Live GPS Tracking Modal */}
+          {isTrackingOpen && (
+            <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4">
+              <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[20px] bg-white shadow-2xl">
+                {/* Tracking Header */}
+                <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-green-dark to-green px-8 py-6 text-white">
+                  <h2 className="font-display text-3xl font-bold">📍 Live Bus Tracking</h2>
+                  <button
+                    onClick={() => setIsTrackingOpen(false)}
+                    className="text-2xl font-bold"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="px-8 py-6 space-y-6">
+                  {/* Bus Selection */}
+                  <div>
+                    <h3 className="font-display text-xl font-bold text-green-dark mb-3">Select Bus</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {Object.entries(busLocations).map(([busId, data]) => (
+                        <button
+                          key={busId}
+                          onClick={() => setSelectedBusForTracking(busId)}
+                          className={`p-4 rounded-lg border-2 transition ${
+                            selectedBusForTracking === busId
+                              ? "border-green bg-green-light"
+                              : "border-gray-200 hover:border-green bg-gray-50"
+                          }`}
+                        >
+                          <div className="font-display font-bold text-lg">{busId}</div>
+                          <div className="text-xs text-gray-600 mt-2">{data.name}</div>
+                          <div className="text-yellow-600 font-bold text-sm mt-2">{data.speed} km/h</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Real-time Location Data */}
+                  {busLocations[selectedBusForTracking] && (
+                    <div className="space-y-6">
+                      {/* Map Visualization */}
+                      <div className="border-2 border-gray-200 rounded-xl p-6 bg-gradient-to-br from-blue-50 to-blue-100">
+                        <h4 className="font-display font-bold text-green-dark mb-4">Route Map (Simplified)</h4>
+                        
+                        {/* Route Progress Visualization */}
+                        <div className="space-y-4">
+                          <div>
+                            <div className="flex justify-between mb-2">
+                              <span className="font-semibold">Route Progress</span>
+                              <span className="font-bold text-green">{busLocations[selectedBusForTracking].progress}%</span>
+                            </div>
+                            <div className="w-full h-3 rounded-full bg-gray-300 overflow-hidden">
+                              <div
+                                className="h-full bg-green transition-all duration-300"
+                                style={{ width: `${busLocations[selectedBusForTracking].progress}%` }}
+                              ></div>
+                            </div>
+                          </div>
+
+                          {/* Waypoints */}
+                          <div className="mt-6">
+                            <div className="text-sm font-semibold text-gray-700 mb-3">Waypoints</div>
+                            <div className="flex justify-between items-center gap-1">
+                              {routeCoordinates.map((point, idx) => (
+                                <div key={idx} className="flex flex-col items-center">
+                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white mb-1 ${
+                                    idx <= routeCoordinates.length * (busLocations[selectedBusForTracking].progress / 100)
+                                      ? "bg-green"
+                                      : "bg-gray-400"
+                                  }`}>
+                                    {idx + 1}
+                                  </div>
+                                  <div className="text-[0.7rem] text-gray-600 text-center max-w-[60px]">{point.name}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* GPS & Location Details */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* Current Location */}
+                        <div className="border-2 border-gray-200 rounded-lg p-4 bg-gray-50">
+                          <div className="text-xs font-bold text-gray-600 uppercase">Current Location</div>
+                          <div className="mt-3 font-mono text-sm font-bold text-green-dark">
+                            <div>Lat: {busLocations[selectedBusForTracking].lat.toFixed(4)}</div>
+                            <div>Lng: {busLocations[selectedBusForTracking].lng.toFixed(4)}</div>
+                          </div>
+                        </div>
+
+                        {/* Speed */}
+                        <div className="border-2 border-gray-200 rounded-lg p-4 bg-gray-50">
+                          <div className="text-xs font-bold text-gray-600 uppercase">Current Speed</div>
+                          <div className="mt-3">
+                            <div className="text-3xl font-black text-yellow">{busLocations[selectedBusForTracking].speed}</div>
+                            <div className="text-xs text-gray-600">km/h</div>
+                          </div>
+                        </div>
+
+                        {/* ETA */}
+                        <div className="border-2 border-gray-200 rounded-lg p-4 bg-gray-50">
+                          <div className="text-xs font-bold text-gray-600 uppercase">ETA to Destination</div>
+                          <div className="mt-3">
+                            <div className="text-2xl font-black text-green">{busLocations[selectedBusForTracking].eta}</div>
+                            <div className="text-xs text-gray-600">Fort Portal</div>
+                          </div>
+                        </div>
+
+                        {/* Distance Remaining */}
+                        <div className="border-2 border-gray-200 rounded-lg p-4 bg-gray-50">
+                          <div className="text-xs font-bold text-gray-600 uppercase">Distance Remaining</div>
+                          <div className="mt-3">
+                            <div className="text-3xl font-black text-blue-600">{Math.round(310 * (1 - busLocations[selectedBusForTracking].progress / 100))}</div>
+                            <div className="text-xs text-gray-600">km</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Additional Info */}
+                      <div className="border-2 border-gray-200 rounded-lg p-4 bg-gradient-to-br from-yellow-50 to-yellow-100">
+                        <h4 className="font-display font-bold text-green-dark mb-3">📡 Live Status</h4>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="font-semibold">Route:</span>
+                            <span className="ml-2">Kampala → Fort Portal</span>
+                          </div>
+                          <div>
+                            <span className="font-semibold">Total Distance:</span>
+                            <span className="ml-2">310 km</span>
+                          </div>
+                          <div>
+                            <span className="font-semibold">Distance Covered:</span>
+                            <span className="ml-2">{Math.round(310 * (busLocations[selectedBusForTracking].progress / 100))} km</span>
+                          </div>
+                          <div>
+                            <span className="font-semibold">Status:</span>
+                            <span className="ml-2 text-green font-bold">🟢 In Transit</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Notes */}
+                      <div className="border-l-4 border-blue-500 bg-blue-50 p-4 rounded">
+                        <p className="text-sm text-gray-700">
+                          <strong>Real-time Updates:</strong> GPS coordinates and ETA are simulated for demonstration. In production, these will be fetched from actual bus GPS trackers via backend API every 5 seconds.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
