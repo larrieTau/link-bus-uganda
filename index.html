@@ -311,7 +311,8 @@
         return /^2567\d{8}$/.test(normalized);
       }
 
-      function activateMobileMoneyPayment() {
+      function activateMobileMoneyPayment(methodOverride = paymentMethod) {
+        const selectedMethod = methodOverride;
         setBookingMessage("");
         if (!origin || !destination || !travelDate) {
           alert("Please complete origin, destination, and travel date first.");
@@ -334,7 +335,7 @@
         const amount = fareByDestination[destination];
         const fromName = locationName[origin] || "Kampala";
         const toName = locationName[destination] || "Destination";
-        const txRef = `LB-${Date.now()}-${paymentMethod.toUpperCase()}`;
+        const txRef = `LB-${Date.now()}-${selectedMethod.toUpperCase()}`;
 
         if (window.FlutterwaveCheckout && FLW_PUBLIC_KEY) {
           setIsPaying(true);
@@ -350,7 +351,7 @@
               name: "Link Bus Passenger"
             },
             meta: {
-              channel: paymentMethod,
+              channel: selectedMethod,
               origin,
               destination,
               travelDate
@@ -363,7 +364,7 @@
             callback: (response) => {
               setIsPaying(false);
               if (response && (response.status === "successful" || response.status === "completed")) {
-                setBookingMessage(`Payment successful via ${paymentMethod.toUpperCase()}. Ref: ${response.tx_ref || txRef}.`);
+                setBookingMessage(`Payment successful via ${selectedMethod.toUpperCase()}. Ref: ${response.tx_ref || txRef}.`);
                 scrollToId("bookingConfirmation");
                 return;
               }
@@ -377,11 +378,17 @@
           return;
         }
 
-        const ussd = paymentMethod === "mtn" ? "*165#" : "*185#";
+        const ussd = selectedMethod === "mtn" ? "*165#" : "*185#";
         setBookingMessage(
           `Live gateway key missing. Demo mode: dial ${ussd} on ${normalizedPhone} and complete UGX ${amount.toLocaleString()} payment. Then confirm with Link Bus support.`
         );
         scrollToId("bookingConfirmation");
+      }
+
+      function handlePayButtonClick(method) {
+        setPaymentMethod(method);
+        if (isPaying) return;
+        activateMobileMoneyPayment(method);
       }
 
       function selectRoute(destinationKey) {
@@ -544,13 +551,13 @@
               <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4 text-xs">
                 <span className="font-medium text-gray-500">Secure payments via:</span>
                 <button
-                  onClick={() => setPaymentMethod("mtn")}
+                  onClick={() => handlePayButtonClick("mtn")}
                   className={`rounded-lg px-3 py-1.5 font-semibold ${paymentMethod === "mtn" ? "bg-[#ffe08b] text-[#5d4a02]" : "bg-[#fff3cd] text-[#856404]"}`}
                 >
                   MTN Mobile Money
                 </button>
                 <button
-                  onClick={() => setPaymentMethod("airtel")}
+                  onClick={() => handlePayButtonClick("airtel")}
                   className={`rounded-lg px-3 py-1.5 font-semibold ${paymentMethod === "airtel" ? "bg-[#ffb9b9] text-[#6f1212]" : "bg-[#ffe0e0] text-[#9b1c1c]"}`}
                 >
                   Airtel Money
