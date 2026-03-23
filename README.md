@@ -1,45 +1,49 @@
-# link-bus-uganda
-A high-performance web suite for Link Bus Uganda. Features real-time booking, QR ticketing, and live fleet tracking. Includes native MTN/Airtel Money integration and a logistics module for couriers. Built for low-bandwidth reliability and scalability, modernizing the Kampala–Western Uganda travel experience with a mobile-first approach.
-Link Bus Uganda: Digital Transformation Suite
-A high-performance, full-stack solution designed to modernize the travel and logistics operations of Link Bus Services, Uganda’s leading long-distance carrier. This platform bridges the gap between traditional transport and 2026 digital standards.
+# Link Bus Uganda
 
-🚀 Key Features
-Smart Booking Engine: Real-time seat selection with dynamic pricing and route filtering for the Kampala–Western Uganda corridor.
+Single-page web app for Link Bus Uganda booking, routes, schedules, terminals, courier rates, and passenger help content.
 
-Localized Payments: Native API integration for MTN Mobile Money and Airtel Money for instant, frictionless checkouts.
+## Current System
 
-Live Fleet Tracker: Real-time GPS-based dashboard for passengers to monitor departures and ETAs from terminals like Namirembe Road and Fort Portal.
+This repository currently contains a static frontend implemented in one file:
+- index.html
 
-QR Ticketing: Encrypted digital boarding passes that work offline to streamline terminal check-ins.
+Tech used in the current implementation:
+- React 18 (CDN + Babel in-browser JSX)
+- Tailwind CSS (CDN)
+- GSAP + ScrollTrigger (CDN)
+- Plain HTML deployment (no build step)
 
-Courier Logistics: A dedicated module for tracking parcels and commercial goods from dispatch to pickup.
+## Features Implemented
 
-🛠️ Technical Stack
-Frontend: React / Next.js (Optimized for low-bandwidth 3G/4G environments).
+- Sticky responsive navigation with mobile menu
+- Hero + booking widget (origin, destination, travel date)
+- Route cards with quick select behavior
+- Live schedule table with status pills
+- Fleet section with animated SVG bus
+- Services and courier rates sections
+- Safety/trust section and reviews
+- Terminals grid and FAQ accordion
+- Footer contact details and WhatsApp CTA
+- GSAP animations:
+  - Hero entrance timeline
+  - Staggered route reveal
+  - Section scroll reveals
+  - Floating fleet bus animation
+  - Pulsing WhatsApp button glow
 
-Backend: Node.js with a Microservices architecture.
+## Run Locally
 
-Database: PostgreSQL (Transactional data) & Redis (Real-time seat locking).
+Option 1: Open directly
+- Open index.html in a browser.
 
-Payments: Integrated via Beyonic / Flutterwave (Uganda-specific gateways).
+Option 2: Use a local static server (recommended)
+- Python 3:
+  - python3 -m http.server 4173
+- Then open:
+  - http://localhost:4173
 
-Maps: Leaflet.js / Google Maps API for route visualization.
+## Notes
 
-📦 Installation & Setup
-Clone the repo:
-
-Bash
-git clone https://github.com/larrietau/link-bus-uganda.git
-Install dependencies:
-
-Bash
-npm install
-Environment Variables:
-Create a .env file and add your Mobile Money API keys and Database URI.
-
-Run Development Server:
-
-Bash
-npm run dev
-🌍 Impact
-This project focuses on digital inclusion, ensuring that travelers in rural areas like Bundibugyo or Kagadi have the same booking convenience as those in the city.
+- Internal anchor links have been validated against existing section IDs.
+- No build pipeline is required for the current version.
+- If you want production optimization, the next step is to migrate to a bundled React setup (Vite/Next.js).

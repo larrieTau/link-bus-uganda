@@ -119,6 +119,9 @@
 
       useEffect(() => {
         document.body.style.overflow = isMenuOpen ? "hidden" : "";
+        return () => {
+          document.body.style.overflow = "";
+        };
       }, [isMenuOpen]);
 
       useEffect(() => {
@@ -303,7 +306,7 @@
           </nav>
 
           {isMenuOpen && (
-            <div className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-7 bg-green-dark">
+            <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-7 bg-green-dark">
               <button
                 className="absolute right-6 top-4 text-4xl text-white"
                 onClick={() => setIsMenuOpen(false)}
@@ -754,7 +757,7 @@
             </div>
           </div>
 
-          <footer className="js-reveal-section bg-ink px-[5vw] pb-8 pt-14 text-white/65">
+          <footer id="contact" className="js-reveal-section bg-ink px-[5vw] pb-8 pt-14 text-white/65">
             <div className="mb-10 grid grid-cols-1 gap-10 md:grid-cols-2 xl:grid-cols-4">
               <div>
                 <div className="font-display text-4xl font-black text-white">LINK BUS</div>
