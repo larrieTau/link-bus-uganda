@@ -125,6 +125,17 @@
       }, [isMenuOpen]);
 
       useEffect(() => {
+        // Ensure hash navigation still works after React mounts dynamic content.
+        const hash = window.location.hash;
+        if (!hash) return;
+        const id = hash.slice(1);
+        const t = setTimeout(() => {
+          document.getElementById(id)?.scrollIntoView({ behavior: "auto", block: "start" });
+        }, 60);
+        return () => clearTimeout(t);
+      }, []);
+
+      useEffect(() => {
         if (!window.gsap || !appRef.current) return;
 
         const gsap = window.gsap;
@@ -132,15 +143,16 @@
         if (ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
 
         const ctx = gsap.context(() => {
-          gsap.set([heroBadgeRef.current, heroTitleRef.current, heroSubRef.current, bookingCardRef.current], { opacity: 0 });
-
           const heroTl = gsap.timeline({ defaults: { ease: "power2.out" } });
           heroTl
-            .from(navRef.current, { y: -16, opacity: 0, duration: 0.45 })
-            .from(heroBadgeRef.current, { y: -16, opacity: 0, duration: 0.45 }, "-=0.2")
-            .from(heroTitleRef.current, { y: 22, opacity: 0, duration: 0.55 }, "-=0.15")
-            .from(heroSubRef.current, { y: 18, opacity: 0, duration: 0.5 }, "-=0.25")
-            .from(bookingCardRef.current, { y: 24, opacity: 0, duration: 0.55 }, "-=0.2");
+            .fromTo(navRef.current, { y: -16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45 })
+            .fromTo(heroBadgeRef.current, { y: -16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45 }, "-=0.2")
+            .fromTo(heroTitleRef.current, { y: 22, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55 }, "-=0.15")
+            .fromTo(heroSubRef.current, { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5 }, "-=0.25")
+            .fromTo(bookingCardRef.current, { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55 }, "-=0.2");
+
+          // Hard fallback in case animation gets interrupted on low-connectivity/CDN timing.
+          gsap.set([heroBadgeRef.current, heroTitleRef.current, heroSubRef.current, bookingCardRef.current], { clearProps: "opacity,transform" });
 
           gsap.from(".js-route-card", {
             y: 24,
@@ -148,9 +160,11 @@
             duration: 0.5,
             stagger: 0.07,
             ease: "power2.out",
+            immediateRender: false,
             scrollTrigger: {
               trigger: "#routes",
-              start: "top 78%"
+              start: "top 78%",
+              once: true
             }
           });
 
@@ -160,9 +174,11 @@
               opacity: 0,
               duration: 0.55,
               ease: "power2.out",
+              immediateRender: false,
               scrollTrigger: {
                 trigger: section,
-                start: "top 82%"
+                start: "top 82%",
+                once: true
               }
             });
           });
