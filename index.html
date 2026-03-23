@@ -1103,6 +1103,305 @@
             </div>
           </footer>
 
+          {/* Admin Dashboard Modal */}
+          {isAdminOpen && (
+            <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4">
+              <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[20px] bg-white shadow-2xl">
+                {/* Admin Modal Header */}
+                <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-green-dark to-green px-8 py-6 text-white">
+                  <h2 className="font-display text-3xl font-bold">🛡️ Admin Dashboard</h2>
+                  {isAdminAuthenticated && (
+                    <button
+                      onClick={handleAdminLogout}
+                      className="rounded-lg bg-white/20 px-4 py-2 text-sm font-bold transition hover:bg-white/30"
+                    >
+                      🚪 Logout
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setIsAdminOpen(false)}
+                    className="text-2xl font-bold"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Login Form */}
+                {!isAdminAuthenticated ? (
+                  <div className="flex items-center justify-center px-8 py-16">
+                    <div className="w-full max-w-md">
+                      <p className="text-center text-gray-600 mb-6">Enter admin password to proceed.</p>
+                      <form onSubmit={handleAdminLogin} className="space-y-4">
+                        <input
+                          type="password"
+                          placeholder="Enter password"
+                          value={adminPassword}
+                          onChange={(e) => setAdminPassword(e.target.value)}
+                          className="w-full rounded-lg border-2 border-gray-300 px-4 py-3 outline-none transition focus:border-green"
+                        />
+                        <button
+                          type="submit"
+                          className="w-full rounded-lg bg-green-dark px-4 py-3 font-bold text-white transition hover:bg-green"
+                        >
+                          Login
+                        </button>
+                      </form>
+                      <p className="mt-4 text-center text-xs text-gray-500">Demo password: admin123</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="px-8 py-6">
+                    {/* Tab Navigation */}
+                    <div className="mb-6 flex gap-2 border-b border-gray-200 overflow-x-auto pb-3">
+                      {["routes", "schedules", "bookings", "payments", "payouts"].map((tab) => (
+                        <button
+                          key={tab}
+                          onClick={() => setAdminTab(tab)}
+                          className={`px-4 py-2 font-semibold transition whitespace-nowrap ${
+                            adminTab === tab
+                              ? "border-b-2 border-green text-green"
+                              : "text-gray-600 hover:text-green"
+                          }`}
+                        >
+                          {tab[0].toUpperCase() + tab.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Routes Tab */}
+                    {adminTab === "routes" && (
+                      <div>
+                        <div className="mb-4 flex items-center justify-between">
+                          <h3 className="font-display text-2xl font-bold text-green-dark">📍 Routes</h3>
+                          <button
+                            onClick={handleAddRoute}
+                            className="rounded-lg bg-green px-4 py-2 font-bold text-white transition hover:bg-green-dark"
+                          >
+                            + Add Route
+                          </button>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead className="border-b-2 border-gray-200 bg-gray-50">
+                              <tr>
+                                <th className="px-4 py-3 text-left">From</th>
+                                <th className="px-4 py-3 text-left">To</th>
+                                <th className="px-4 py-3 text-left">Distance</th>
+                                <th className="px-4 py-3 text-left">Status</th>
+                                <th className="px-4 py-3 text-center">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {adminRoutes.map((route) => (
+                                <tr key={route.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                  <td className="px-4 py-3">{route.from}</td>
+                                  <td className="px-4 py-3">{route.to}</td>
+                                  <td className="px-4 py-3">{route.distance}</td>
+                                  <td className="px-4 py-3">
+                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${route.status === "Active" ? "bg-green-light text-green" : "bg-gray-200 text-gray-700"}`}>
+                                      {route.status}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    <button className="text-blue-500 hover:underline text-xs mr-2">Edit</button>
+                                    <button onClick={() => handleDeleteRoute(route.id)} className="text-red-500 hover:underline text-xs">Delete</button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Schedules Tab */}
+                    {adminTab === "schedules" && (
+                      <div>
+                        <div className="mb-4 flex items-center justify-between">
+                          <h3 className="font-display text-2xl font-bold text-green-dark">📅 Schedules</h3>
+                          <button
+                            onClick={handleAddSchedule}
+                            className="rounded-lg bg-green px-4 py-2 font-bold text-white transition hover:bg-green-dark"
+                          >
+                            + Add Schedule
+                          </button>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead className="border-b-2 border-gray-200 bg-gray-50">
+                              <tr>
+                                <th className="px-4 py-3 text-left">Route</th>
+                                <th className="px-4 py-3 text-left">Departure</th>
+                                <th className="px-4 py-3 text-left">Arrival</th>
+                                <th className="px-4 py-3 text-left">Bus</th>
+                                <th className="px-4 py-3 text-left">Seats</th>
+                                <th className="px-4 py-3 text-center">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {adminSchedules.map((schedule) => (
+                                <tr key={schedule.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                  <td className="px-4 py-3">{schedule.route}</td>
+                                  <td className="px-4 py-3">{schedule.departure}</td>
+                                  <td className="px-4 py-3">{schedule.arrival}</td>
+                                  <td className="px-4 py-3 font-mono text-xs">{schedule.bus}</td>
+                                  <td className="px-4 py-3">{schedule.booked}/{schedule.seats}</td>
+                                  <td className="px-4 py-3 text-center">
+                                    <button className="text-blue-500 hover:underline text-xs mr-2">Edit</button>
+                                    <button onClick={() => handleDeleteSchedule(schedule.id)} className="text-red-500 hover:underline text-xs">Delete</button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Bookings Tab */}
+                    {adminTab === "bookings" && (
+                      <div>
+                        <h3 className="font-display text-2xl font-bold text-green-dark mb-4">🎟️ Bookings</h3>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead className="border-b-2 border-gray-200 bg-gray-50">
+                              <tr>
+                                <th className="px-4 py-3 text-left">Passenger</th>
+                                <th className="px-4 py-3 text-left">Phone</th>
+                                <th className="px-4 py-3 text-left">Route</th>
+                                <th className="px-4 py-3 text-left">Date</th>
+                                <th className="px-4 py-3 text-left">Amount</th>
+                                <th className="px-4 py-3 text-left">Status</th>
+                                <th className="px-4 py-3 text-center">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {adminBookings.map((booking) => (
+                                <tr key={booking.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                  <td className="px-4 py-3">{booking.passenger}</td>
+                                  <td className="px-4 py-3 text-xs font-mono">{booking.phone}</td>
+                                  <td className="px-4 py-3 text-xs">{booking.route}</td>
+                                  <td className="px-4 py-3">{booking.date}</td>
+                                  <td className="px-4 py-3 font-bold">{booking.amount}</td>
+                                  <td className="px-4 py-3">
+                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === "Confirmed" ? "bg-green-light text-green" : "bg-yellow-light text-yellow-dark"}`}>
+                                      {booking.status}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    <button className="text-blue-500 hover:underline text-xs mr-2">View</button>
+                                    <button onClick={() => handleDeleteBooking(booking.id)} className="text-red-500 hover:underline text-xs">Cancel</button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Payments Tab */}
+                    {adminTab === "payments" && (
+                      <div>
+                        <div className="mb-4 flex items-center justify-between">
+                          <h3 className="font-display text-2xl font-bold text-green-dark">💳 Payments</h3>
+                          <button
+                            onClick={handleRefreshPayments}
+                            className="rounded-lg bg-blue-500 px-4 py-2 font-bold text-white transition hover:bg-blue-600"
+                          >
+                            🔄 Refresh
+                          </button>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead className="border-b-2 border-gray-200 bg-gray-50">
+                              <tr>
+                                <th className="px-4 py-3 text-left">Transaction Ref</th>
+                                <th className="px-4 py-3 text-left">Amount</th>
+                                <th className="px-4 py-3 text-left">Method</th>
+                                <th className="px-4 py-3 text-left">Date</th>
+                                <th className="px-4 py-3 text-left">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {adminPayments.map((payment) => (
+                                <tr key={payment.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                  <td className="px-4 py-3 text-xs font-mono">{payment.ref}</td>
+                                  <td className="px-4 py-3 font-bold">{payment.amount}</td>
+                                  <td className="px-4 py-3 text-xs">{payment.method}</td>
+                                  <td className="px-4 py-3">{payment.date}</td>
+                                  <td className="px-4 py-3">
+                                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-light text-green">
+                                      {payment.status}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Payouts Tab */}
+                    {adminTab === "payouts" && (
+                      <div>
+                        <div className="mb-4 flex items-center justify-between">
+                          <h3 className="font-display text-2xl font-bold text-green-dark">💰 Payouts</h3>
+                          <button
+                            onClick={handleProcessPayout}
+                            className="rounded-lg bg-green px-4 py-2 font-bold text-white transition hover:bg-green-dark"
+                          >
+                            💸 Process Payout
+                          </button>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead className="border-b-2 border-gray-200 bg-gray-50">
+                              <tr>
+                                <th className="px-4 py-3 text-left">Date</th>
+                                <th className="px-4 py-3 text-left">Total Payments</th>
+                                <th className="px-4 py-3 text-left">Commission (10%)</th>
+                                <th className="px-4 py-3 text-left">Net Payout</th>
+                                <th className="px-4 py-3 text-left">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {adminPayouts.map((payout) => (
+                                <tr key={payout.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                  <td className="px-4 py-3">{payout.date}</td>
+                                  <td className="px-4 py-3 font-bold">{payout.totalPayments}</td>
+                                  <td className="px-4 py-3 text-amber-600">{payout.commission}</td>
+                                  <td className="px-4 py-3 font-bold text-green">{payout.netPayout}</td>
+                                  <td className="px-4 py-3">
+                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${payout.status === "Completed" ? "bg-green-light text-green" : "bg-yellow-light text-yellow-dark"}`}>
+                                      {payout.status}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Export & Summary */}
+                    <div className="mt-8 border-t border-gray-200 pt-6">
+                      <button
+                        onClick={handleExportReports}
+                        className="rounded-lg bg-purple-500 px-6 py-3 font-bold text-white transition hover:bg-purple-600"
+                      >
+                        📊 Export Full Report
+                      </button>
+                      <p className="mt-3 text-xs text-gray-500">All reports exported to CSV/JSON format. Check browser console for logs.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <a
             ref={whatsappRef}
             href="https://wa.me/256700000000?text=Hello%20Link%20Bus%2C%20I%20need%20help%20with%20my%20booking."
