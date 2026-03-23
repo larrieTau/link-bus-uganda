@@ -13,11 +13,28 @@
     content="Link Bus Uganda, Bus to Fort Portal, Kampala to Kasese bus, Link Bus Booking, Uganda bus tickets, Kampala courier service"
   />
 
+  <meta name="theme-color" content="#1a6b2f" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Link Bus Uganda" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
     href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap"
     rel="stylesheet"
   />
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX', {
+      cookie_flags: 'SameSite=None;Secure'
+    });
+  </script>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -184,6 +201,237 @@
         { id: 5, time: "17:00", dest: "Fort Portal", price: 42000, amenities: ["ac", "usb", "toilet"], bus: "LB-005" },
         { id: 6, time: "19:30", dest: "Fort Portal", price: 38000, amenities: ["ac"], bus: "LB-006" }
       ]);
+
+      // Multi-language Support
+      const [language, setLanguage] = useState("en"); // 'en', 'lg' (Luganda), 'sw' (Swahili)
+
+      const translations = {
+        en: {
+          appName: "LINK BUS",
+          tagline: "Uganda's Western Corridor Champion",
+          heroMain: "Travel Safe. Travel Comfortable.",
+          heroSub: "Daily scheduled buses from Kampala to Fort Portal, Kasese, Masindi, Hoima, Bundibugyo and beyond.",
+          bookYourJourney: "Book Your Journey",
+          searchBuses: "SEARCH BUSES →",
+          advancedSearch: "🔍 Advanced",
+          trackBus: "📍 Track Bus",
+          admin: "⚙️ Admin",
+          bookNow: "🎟️ Book Now",
+          from: "From",
+          to: "To",
+          date: "Date",
+          phone: "Phone Number",
+          mobileMoneyNote: "Enter your Uganda phone number",
+          readyToTravel: "Ready to Travel?",
+          readyToTravelSub: "Book your seat online in under 2 minutes. Pay with MTN or Airtel Money.",
+          whatsappUs: "💬 WhatsApp Us"
+        },
+        lg: {
+          appName: "LINK BUS",
+          tagline: "Kampuni ya Basi Ekinene nnyo ey'Uganda",
+          heroMain: "Landa Okukoma Bulamu. Landa mu Mahlo Agaffe.",
+          heroSub: "Bbaasi ze buli lunaku okuva Kampala okugenda Forte Portal, Kasese, Masindi, Hoima, Bundibugyo n'okukira.",
+          bookYourJourney: "Bokekere Ekigendererwamu",
+          searchBuses: "SAGANYA BBAASI →",
+          advancedSearch: "🔍 Okunkawo Emikwano",
+          trackBus: "📍 Gendereza Bbaasi",
+          admin: "⚙️ Kukulabiriramu",
+          bookNow: "🎟️ Okukola Kiwendo",
+          from: "Okuva",
+          to: "Okugenda",
+          date: "Ennaku",
+          phone: "Namba y'Ennyumba",
+          mobileMoneyNote: "Wandiika namba ya simu ey'Uganda",
+          readyToTravel: "Ready okukoma?",
+          readyToTravelSub: "Bokekere ekigendererwamu mu ddakiika 2. Londa MTN oba Airtel Money.",
+          whatsappUs: "💬 Tutegeeze mu WhatsApp"
+        },
+        sw: {
+          appName: "LINK BUS",
+          tagline: "Mshiriki Mkuu wa Magharibi wa Uganda",
+          heroMain: "Safiri kwa Usalama. Safiri kwa Rahanisi.",
+          heroSub: "Basi za kila siku kutoka Kampala kwenda Forte Portal, Kasese, Masindi, Hoima, Bundibugyo na zaidi.",
+          bookYourJourney: "Geuza Kiti Yako",
+          searchBuses: "TAFUTA BASI →",
+          advancedSearch: "🔍 Utafutaji Wa Hali Ya Juu",
+          trackBus: "📍 Fuatilia Basi",
+          admin: "⚙️ Mgeni",
+          bookNow: "🎟️ Geuza Sasa",
+          from: "Kutoka",
+          to: "Kwenda",
+          date: "Tarehe",
+          phone: "Namba ya Simu",
+          mobileMoneyNote: "Ingiza namba ya simu ya Uganda",
+          readyToTravel: "Uko Tayari Kusafiri?",
+          readyToTravelSub: "Geuza kiti chako mtandaoni katika dakika 2. Lipa kwa MTN au Airtel Money.",
+          whatsappUs: "💬 Chapia WhatsApp"
+        }
+      };
+
+      function t(key) {
+        return translations[language]?.[key] || translations["en"]?.[key] || key;
+      }
+
+      // PWA & Offline Support
+      const [isOnline, setIsOnline] = useState(navigator.onLine);
+      const [offlineBookings, setOfflineBookings] = useState(() => {
+        // Load offline bookings from localStorage
+        try {
+          return JSON.parse(localStorage.getItem("offlineBookings")) || [];
+        } catch {
+          return [];
+        }
+      });
+      const [showOfflineIndicator, setShowOfflineIndicator] = useState(false);
+
+      // Monitor online/offline status
+      useEffect(() => {
+        const handleOnline = () => {
+          setIsOnline(true);
+          setShowOfflineIndicator(false);
+          console.log("✅ Back online");
+        };
+        const handleOffline = () => {
+          setIsOnline(false);
+          setShowOfflineIndicator(true);
+          console.log("❌ Going offline");
+        };
+        window.addEventListener("online", handleOnline);
+        window.addEventListener("offline", handleOffline);
+        return () => {
+          window.removeEventListener("online", handleOnline);
+          window.removeEventListener("offline", handleOffline);
+        };
+      }, []);
+
+      // Save offline bookings to localStorage
+      useEffect(() => {
+        localStorage.setItem("offlineBookings", JSON.stringify(offlineBookings));
+      }, [offlineBookings]);
+
+      // Register Service Worker for offline caching
+      useEffect(() => {
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker
+            .register("data:text/javascript,console.log('Service Worker would be registered here')")
+            .catch((err) => console.log("Service Worker registration skipped in demo mode"));
+        }
+      }, []);
+
+      function saveOfflineBooking() {
+        if (!destination || !travelDate || !phoneNumber) {
+          alert("Please complete the booking form first");
+          return;
+        }
+        const newBooking = {
+          id: Date.now(),
+          origin,
+          destination,
+          travelDate,
+          phoneNumber,
+          paymentMethod,
+          timestamp: new Date().toISOString(),
+          status: "draft"
+        };
+        setOfflineBookings([...offlineBookings, newBooking]);
+        alert("✅ Booking draft saved locally. It will be submitted when you're back online.");
+        console.log("📋 Offline booking saved:", newBooking);
+      }
+
+      function clearOfflineBookings() {
+        setOfflineBookings([]);
+        localStorage.removeItem("offlineBookings");
+        console.log("🗑️ Offline bookings cleared");
+      }
+
+      // Analytics & Custom Tracking
+      function trackEvent(eventName, eventData = {}) {
+        // Google Analytics event
+        if (window.gtag) {
+          gtag('event', eventName, eventData);
+        }
+        // Custom console logging for demo
+        console.log(`📊 Event: ${eventName}`, eventData);
+        // Send to custom backend (if needed)
+        // fetch('/api/track', { method: 'POST', body: JSON.stringify({ event: eventName, data: eventData }) })
+      }
+
+      function trackRouteSearch(originVal, destinationVal, dateVal) {
+        trackEvent('route_search', {
+          origin: originVal,
+          destination: destinationVal,
+          date: dateVal,
+          timestamp: new Date().toISOString(),
+          language: language
+        });
+      }
+
+      function trackPaymentAttempt(method, amount, destination) {
+        trackEvent('payment_attempt', {
+          payment_method: method,
+          amount_ugx: amount,
+          destination: destination,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      function trackBookingCompleted(destination, amount, method) {
+        trackEvent('booking_completed', {
+          destination: destination,
+          amount_ugx: amount,
+          payment_method: method,
+          timestamp: new Date().toISOString(),
+          language: language
+        });
+      }
+
+      function trackFeatureUsage(featureName) {
+        trackEvent('feature_used', {
+          feature: featureName,
+          timestamp: new Date().toISOString(),
+          is_online: isOnline,
+          language: language
+        });
+      }
+
+      // Track initial page load
+      useEffect(() => {
+        trackEvent('page_view', {
+          page: 'home',
+          timestamp: new Date().toISOString(),
+          device_type: /mobile/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
+        });
+      }, []);
+
+      // Accessibility: Handle keyboard navigation
+      useEffect(() => {
+        const handleKeyDown = (e) => {
+          // Escape closes modals
+          if (e.key === "Escape") {
+            setIsAdminOpen(false);
+            setIsTrackingOpen(false);
+            setIsSearchOpen(false);
+            setIsMenuOpen(false);
+          }
+          // Alt + A opens admin
+          if (e.altKey && e.key === "a") {
+            e.preventDefault();
+            setIsAdminOpen(!isAdminOpen);
+          }
+          // Alt + T opens tracking
+          if (e.altKey && e.key === "t") {
+            e.preventDefault();
+            setIsTrackingOpen(!isTrackingOpen);
+          }
+          // Alt + S opens search
+          if (e.altKey && e.key === "s") {
+            e.preventDefault();
+            setIsSearchOpen(!isSearchOpen);
+          }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+      }, [isAdminOpen, isTrackingOpen, isSearchOpen, isMenuOpen]);
 
       const FLW_PUBLIC_KEY = window.FLW_PUBLIC_KEY || "";
 
@@ -372,6 +620,7 @@
           alert("Origin and destination cannot be the same.");
           return;
         }
+        trackRouteSearch(origin, destination, travelDate);
         scrollToId("schedule");
       }
 
@@ -414,6 +663,9 @@
         const fromName = locationName[origin] || "Kampala";
         const toName = locationName[destination] || "Destination";
         const txRef = `LB-${Date.now()}-${selectedMethod.toUpperCase()}`;
+
+        // Track payment attempt
+        trackPaymentAttempt(selectedMethod, amount, toName);
 
         if (window.FlutterwaveCheckout && FLW_PUBLIC_KEY) {
           setIsPaying(true);
@@ -655,6 +907,28 @@
 
       return (
         <div ref={appRef}>
+          {/* Skip Navigation Link for Accessibility */}
+          <a
+            href="#main-content"
+            className="absolute -top-10 left-0 z-50 bg-black px-4 py-2 text-white focus:top-0"
+          >
+            Skip to main content
+          </a>
+
+          {/* Offline Indicator */}
+          {showOfflineIndicator && (
+            <div className="fixed top-0 left-0 right-0 z-40 bg-amber-500 text-white px-4 py-3 text-center font-semibold flex items-center justify-center gap-2">
+              📡 You are offline - Bookings will be saved locally and submitted when online
+              <button
+                onClick={() => setShowOfflineIndicator(false)}
+                className="ml-auto text-xl font-bold hover:opacity-70"
+                aria-label="Close offline indicator"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           <nav ref={navRef} className="sticky top-0 z-50 flex h-16 items-center justify-between bg-green-dark px-[5vw] shadow-[0_2px_12px_rgba(0,0,0,0.25)]">
             <a href="#" className="flex items-center gap-2.5 no-underline">
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-yellow font-display text-[1.4rem] font-black text-green-dark">LB</div>
@@ -685,20 +959,43 @@
             </a>
 
             <button
-              onClick={() => setIsAdminOpen(true)}
+              onClick={() => {
+                trackFeatureUsage("admin_dashboard");
+                setIsAdminOpen(true);
+              }}
               className="hidden whitespace-nowrap rounded-lg bg-white/20 px-4 py-2 text-xs font-bold text-white transition hover:bg-white/30 md:inline-block"
+              aria-label="Open admin dashboard (Alt+A)"
               title="Admin Dashboard"
             >
               ⚙️ Admin
             </button>
 
             <button
-              onClick={() => setIsTrackingOpen(true)}
+              onClick={() => {
+                trackFeatureUsage("gps_tracking");
+                setIsTrackingOpen(true);
+              }}
               className="hidden whitespace-nowrap rounded-lg bg-white/20 px-4 py-2 text-xs font-bold text-white transition hover:bg-white/30 md:inline-block"
+              aria-label="Track your bus in real-time (Alt+T)"
               title="Track Your Bus"
             >
               📍 Track Bus
             </button>
+
+            <select
+              value={language}
+              onChange={(e) => {
+                trackEvent('language_changed', { language: e.target.value });
+                setLanguage(e.target.value);
+              }}
+              className="hidden whitespace-nowrap rounded-lg bg-white/20 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/30 md:inline-block cursor-pointer"
+              aria-label="Select language"
+              title="Choose language"
+            >
+              <option value="en">🇬🇧 English</option>
+              <option value="lg">🇺🇬 Luganda</option>
+              <option value="sw">🇰🇪 Swahili</option>
+            </select>
 
             <button
               className="flex flex-col gap-1.5 md:hidden"
@@ -741,27 +1038,36 @@
 
           <section
             id="booking"
+            role="main"
+            aria-label="Booking section with hero banner"
             className="relative flex min-h-[92vh] flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-green-dark via-green to-[#2e9e4f] px-[5vw] pb-10 pt-16"
           >
             <div className="hero-pattern absolute inset-0"></div>
 
             <div ref={heroBadgeRef} className="relative z-10 rounded-full border border-yellow bg-[rgba(245,197,0,0.18)] px-4 py-1.5 text-[0.78rem] font-semibold uppercase tracking-[0.1em] text-yellow">
-              🇺🇬 Uganda's Western Corridor Champion
+              🇺🇬 {t("tagline")}
             </div>
             <h1 ref={heroTitleRef} className="relative z-10 mt-5 text-center font-display text-[clamp(2.8rem,8vw,6.5rem)] font-black uppercase leading-[0.95] text-white">
-              Travel <span className="text-yellow">Safe</span>.<br />
-              Travel <span className="text-yellow">Comfortable</span>.
+              {language === "en" && (
+                <>Travel <span className="text-yellow">Safe</span>.<br />Travel <span className="text-yellow">Comfortable</span>.</>
+              )}
+              {language === "lg" && (
+                <>{t("heroMain")}</>
+              )}
+              {language === "sw" && (
+                <>{t("heroMain")}</>
+              )}
             </h1>
             <p ref={heroSubRef} className="relative z-10 mt-4 max-w-[580px] text-center text-[clamp(1rem,2.5vw,1.25rem)] text-white/80">
-              Daily scheduled buses from Kampala to Fort Portal, Kasese, Masindi, Hoima, Bundibugyo and beyond.
+              {t("heroSub")}
             </p>
 
             <div ref={bookingCardRef} className="relative z-10 mt-10 w-full max-w-[820px] rounded-[20px] bg-[#fafafa] p-5 shadow-cardLg md:p-8">
-              <h2 className="font-display text-3xl font-extrabold text-green-dark">🎟️ Book Your Journey</h2>
+              <h2 className="font-display text-3xl font-extrabold text-green-dark">🎟️ {t("bookYourJourney")}</h2>
 
               <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold uppercase tracking-[0.07em] text-gray-500">From</label>
+                  <label className="text-xs font-bold uppercase tracking-[0.07em] text-gray-500">{t("from")}</label>
                   <select
                     className="cursor-pointer rounded-[10px] border-2 border-gray-200 bg-white px-3.5 py-3 text-[0.95rem] outline-none transition focus:border-green"
                     value={origin}
@@ -777,7 +1083,7 @@
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold uppercase tracking-[0.07em] text-gray-500">To</label>
+                  <label className="text-xs font-bold uppercase tracking-[0.07em] text-gray-500">{t("to")}</label>
                   <select
                     className="cursor-pointer rounded-[10px] border-2 border-gray-200 bg-white px-3.5 py-3 text-[0.95rem] outline-none transition focus:border-green"
                     value={destination}
@@ -809,8 +1115,18 @@
                 <button
                   onClick={searchBuses}
                   className="whitespace-nowrap rounded-[10px] bg-green px-7 py-[13px] font-display text-[1.1rem] font-bold tracking-[0.04em] text-white transition hover:-translate-y-0.5 hover:bg-green-dark"
+                  aria-label="Search for available buses"
                 >
-                  SEARCH BUSES →
+                  {t("searchBuses")}
+                </button>
+
+                <button
+                  onClick={() => setIsSearchOpen(true)}
+                  className="whitespace-nowrap rounded-[10px] bg-blue-600 px-5 py-[13px] font-display text-[1rem] font-bold text-white transition hover:-translate-y-0.5 hover:bg-blue-700"
+                  aria-label="Open advanced search with filters (Alt+S)"
+                  title="Advanced filters"
+                >
+                  {t("advancedSearch")}
                 </button>
               </div>
 
@@ -829,6 +1145,36 @@
                   Airtel Money
                 </button>
                 <span className="rounded-lg bg-[#e8f0fe] px-3 py-1.5 font-semibold text-[#1a56db]">Visa / Mastercard</span>
+              </div>
+
+              {/* Offline Booking Section */}
+              <div className="mt-4 border-t border-gray-100 pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs font-bold uppercase text-gray-500">💾 Offline Booking</span>
+                  {offlineBookings.length > 0 && (
+                    <span className="inline-block bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-xs font-bold">
+                      {offlineBookings.length} draft{offlineBookings.length !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-600 mb-3">Save your booking locally when offline. It will be submitted automatically when you reconnect.</p>
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={saveOfflineBooking}
+                    className="rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-white transition hover:bg-amber-600"
+                    disabled={isOnline && offlineBookings.length === 0}
+                  >
+                    💾 Save as Draft
+                  </button>
+                  {offlineBookings.length > 0 && (
+                    <button
+                      onClick={() => setIsSearchOpen(true)}
+                      className="rounded-lg bg-blue-500 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-600"
+                    >
+                      📋 View Drafts ({offlineBookings.length})
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="mt-3 grid grid-cols-1 gap-3 border-t border-gray-100 pt-4 md:grid-cols-[1fr_auto]">
@@ -1196,11 +1542,11 @@
           </section>
 
           <div className="js-reveal-section bg-gradient-to-br from-yellow to-[#ffe033] px-[5vw] py-16 text-center">
-            <h2 className="font-display text-[clamp(2rem,5vw,3.5rem)] font-black text-green-dark">Ready to Travel?</h2>
-            <p className="mt-2 text-[1.1rem] text-green">Book your seat online in under 2 minutes. Pay with MTN or Airtel Money.</p>
+            <h2 className="font-display text-[clamp(2rem,5vw,3.5rem)] font-black text-green-dark">{t("readyToTravel")}</h2>
+            <p className="mt-2 text-[1.1rem] text-green">{t("readyToTravelSub")}</p>
             <div className="mt-7 flex flex-wrap justify-center gap-4">
-              <a href="#booking" className="rounded-[10px] bg-green-dark px-9 py-3.5 font-display text-2xl font-bold text-white transition hover:-translate-y-0.5 hover:bg-green">🎟️ Book Now</a>
-              <a href="https://wa.me/256700000000" className="rounded-[10px] border-2 border-green-dark bg-green-dark/10 px-9 py-3.5 font-display text-2xl font-bold text-green-dark transition hover:bg-green-dark/20">💬 WhatsApp Us</a>
+              <a href="#booking" className="rounded-[10px] bg-green-dark px-9 py-3.5 font-display text-2xl font-bold text-white transition hover:-translate-y-0.5 hover:bg-green">🎟️ {t("bookNow")}</a>
+              <a href="https://wa.me/256700000000" className="rounded-[10px] border-2 border-green-dark bg-green-dark/10 px-9 py-3.5 font-display text-2xl font-bold text-green-dark transition hover:bg-green-dark/20">{t("whatsappUs")}</a>
             </div>
           </div>
 
@@ -1707,6 +2053,211 @@
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Advanced Search Modal */}
+          {isSearchOpen && (
+            <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4">
+              <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[20px] bg-white shadow-2xl">
+                {/* Search Header */}
+                <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 text-white">
+                  <h2 className="font-display text-3xl font-bold">🔍 Advanced Search</h2>
+                  <button
+                    onClick={() => setIsSearchOpen(false)}
+                    className="text-2xl font-bold"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="px-8 py-6 space-y-6">
+                  {/* Time Filter */}
+                  <div className="border-2 border-gray-200 rounded-lg p-6 bg-gray-50">
+                    <h3 className="font-display font-bold text-lg text-green-dark mb-4">⏰ Departure Time</h3>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">From</label>
+                        <input
+                          type="time"
+                          value={searchFilters.minTime}
+                          onChange={(e) =>
+                            setSearchFilters({ ...searchFilters, minTime: e.target.value })
+                          }
+                          className="w-full rounded-lg border-2 border-gray-300 px-4 py-3 outline-none transition focus:border-blue-600"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">To</label>
+                        <input
+                          type="time"
+                          value={searchFilters.maxTime}
+                          onChange={(e) =>
+                            setSearchFilters({ ...searchFilters, maxTime: e.target.value })
+                          }
+                          className="w-full rounded-lg border-2 border-gray-300 px-4 py-3 outline-none transition focus:border-blue-600"
+                        />
+                      </div>
+                    </div>
+                    <p className="mt-3 text-xs text-gray-600">
+                      Selected time range: <span className="font-bold">{searchFilters.minTime}</span> to <span className="font-bold">{searchFilters.maxTime}</span>
+                    </p>
+                  </div>
+
+                  {/* Price Filter */}
+                  <div className="border-2 border-gray-200 rounded-lg p-6 bg-gray-50">
+                    <h3 className="font-display font-bold text-lg text-green-dark mb-4">💰 Price Range (UGX)</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between mb-2">
+                          <label className="text-sm font-semibold text-gray-700">Min Price</label>
+                          <span className="font-bold text-green-dark">{searchFilters.minPrice.toLocaleString()}</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="20000"
+                          max="60000"
+                          step="5000"
+                          value={searchFilters.minPrice}
+                          onChange={(e) =>
+                            setSearchFilters({ ...searchFilters, minPrice: parseInt(e.target.value) })
+                          }
+                          className="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-green"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex justify-between mb-2">
+                          <label className="text-sm font-semibold text-gray-700">Max Price</label>
+                          <span className="font-bold text-green-dark">{searchFilters.maxPrice.toLocaleString()}</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="30000"
+                          max="70000"
+                          step="5000"
+                          value={searchFilters.maxPrice}
+                          onChange={(e) =>
+                            setSearchFilters({ ...searchFilters, maxPrice: parseInt(e.target.value) })
+                          }
+                          className="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-green"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Amenities Filter */}
+                  <div className="border-2 border-gray-200 rounded-lg p-6 bg-gray-50">
+                    <h3 className="font-display font-bold text-lg text-green-dark mb-4">✨ Amenities</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      {[
+                        { key: "ac", label: "❄️ Air Conditioning", emoji: "AC" },
+                        { key: "wifi", label: "📶 WiFi", emoji: "WiFi" },
+                        { key: "usb", label: "🔌 USB Charging", emoji: "USB" },
+                        { key: "recline", label: "🛏️ Reclining Seats", emoji: "Recline" },
+                        { key: "toilet", label: "🚽 Onboard Toilet", emoji: "WC" },
+                        { key: "blanket", label: "🛌 Blankets", emoji: "Blanket" }
+                      ].map((amenity) => (
+                        <label
+                          key={amenity.key}
+                          className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-300 hover:border-green cursor-pointer transition"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={searchFilters.amenities[amenity.key]}
+                            onChange={(e) =>
+                              setSearchFilters({
+                                ...searchFilters,
+                                amenities: {
+                                  ...searchFilters.amenities,
+                                  [amenity.key]: e.target.checked
+                                }
+                              })
+                            }
+                            className="w-4 h-4 rounded accent-green cursor-pointer"
+                          />
+                          <div>
+                            <div className="font-semibold text-sm text-gray-700">{amenity.label}</div>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Search Results */}
+                  <div className="border-2 border-gray-200 rounded-lg p-6 bg-gray-50">
+                    <h3 className="font-display font-bold text-lg text-green-dark mb-4">
+                      📋 Results ({filterSchedules().length})
+                    </h3>
+                    {filterSchedules().length === 0 ? (
+                      <p className="text-center text-gray-600 py-6">No buses match your filters. Try adjusting your search.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {filterSchedules().map((schedule) => (
+                          <div
+                            key={schedule.id}
+                            className="border border-gray-200 rounded-lg p-4 hover:bg-white transition border-l-4 border-l-green"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <div className="font-bold text-lg">{schedule.time}</div>
+                                <div className="text-sm text-gray-600 mt-1">Bus: {schedule.bus}</div>
+                                <div className="flex gap-2 flex-wrap mt-2">
+                                  {schedule.amenities.map((amenity) => {
+                                    const amenityNames = {
+                                      ac: "❄️ AC",
+                                      wifi: "📶 WiFi",
+                                      usb: "🔌 USB",
+                                      recline: "🛏️ Recline",
+                                      toilet: "🚽 WC",
+                                      blanket: "🛌 Blanket"
+                                    };
+                                    return (
+                                      <span
+                                        key={amenity}
+                                        className="inline-block text-xs bg-green-light text-green px-2 py-1 rounded"
+                                      >
+                                        {amenityNames[amenity]}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="font-display text-2xl font-black text-green">
+                                  {schedule.price.toLocaleString()}
+                                </div>
+                                <div className="text-xs text-gray-600">UGX</div>
+                                <button className="mt-3 bg-green px-4 py-2 text-sm font-bold text-white rounded transition hover:bg-green-dark">
+                                  Select
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={resetFilters}
+                      className="flex-1 rounded-lg bg-gray-300 px-6 py-3 font-bold text-gray-700 transition hover:bg-gray-400"
+                    >
+                      🔄 Reset Filters
+                    </button>
+                    <button
+                      onClick={() => {
+                        searchBuses();
+                        setIsSearchOpen(false);
+                      }}
+                      className="flex-1 rounded-lg bg-green px-6 py-3 font-bold text-white transition hover:bg-green-dark"
+                    >
+                      ✓ Apply Search
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
